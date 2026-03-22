@@ -66,6 +66,23 @@ function __prompt_format_duration --description 'Format CMD_DURATION for the pro
     printf '%sm\n' $minutes
 end
 
+function __prompt_current_path --description 'Render the current path without abbreviation'
+    set -l cwd $PWD
+
+    if test "$cwd" = "$HOME"
+        printf '~\n'
+        return 0
+    end
+
+    if string match -q -- "$HOME/*" $cwd
+        set -l suffix (string sub -s (math (string length -- $HOME) + 1) -- $cwd)
+        printf '~%s\n' "$suffix"
+        return 0
+    end
+
+    printf '%s\n' "$cwd"
+end
+
 function fish_prompt --description 'Two-line prompt with git context'
     set -l last_status $status
     set -l normal (set_color normal)
@@ -76,7 +93,7 @@ function fish_prompt --description 'Two-line prompt with git context'
     set -l error_color (set_color red)
     set -l prompt_color (set_color green)
 
-    printf '%s%s%s' $cwd_color (prompt_pwd) $normal
+    printf '%s%s%s' $cwd_color (__prompt_current_path) $normal
 
     if command -sq git
         if command git rev-parse --is-inside-work-tree >/dev/null 2>/dev/null
