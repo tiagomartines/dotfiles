@@ -1,6 +1,16 @@
 set -g fish_greeting
 
+if command -sq nvim
+    set -gx EDITOR nvim
+    set -gx VISUAL nvim
+end
+
 if status is-interactive
+    if command -sq nvim
+        alias vim nvim
+        abbr --add v nvim
+    end
+
     if command -sq git
         abbr --add g git
         abbr --add gst 'git status --short --branch'

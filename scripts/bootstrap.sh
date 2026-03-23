@@ -100,7 +100,7 @@ apply_dotfiles() {
   [[ -x "$stow_bin" ]] || die "stow not found at $stow_bin after Homebrew installation."
 
   log "Applying dotfiles with GNU Stow"
-  "$stow_bin" --restow -d "$repo_root" -t "$HOME" ghostty fish tmux
+  "$stow_bin" --restow -d "$repo_root" -t "$HOME" ghostty fish tmux nvim
 }
 
 find_docker_compose_plugin() {
@@ -158,6 +158,11 @@ validate_fish_environment() {
   "$fish_bin" -lc 'command -sq colima' || die "fish cannot find colima after bootstrap."
   "$fish_bin" -lc 'docker compose version >/dev/null 2>&1' || die "docker compose is not available inside fish."
   "$fish_bin" -lc 'command -sq tmux' || die "fish cannot find tmux after bootstrap."
+  "$fish_bin" -lc 'command -sq nvim' || die "fish cannot find nvim after bootstrap."
+  "$fish_bin" -lc 'command -sq tree-sitter' || die "fish cannot find tree-sitter after bootstrap."
+  "$fish_bin" -lc 'command -sq rg' || die "fish cannot find ripgrep after bootstrap."
+  "$fish_bin" -lc 'command -sq fd' || die "fish cannot find fd after bootstrap."
+  "$fish_bin" -lc 'command -sq fzf' || die "fish cannot find fzf after bootstrap."
 }
 
 main() {
@@ -202,6 +207,7 @@ main() {
   log "Bootstrap complete. Start a new terminal session or run: exec fish -l"
   log "Then start Colima with: colima start"
   log "Verify the container runtime with: docker ps"
+  log "Open Neovim once to install plugins and host-side Mason tooling: nvim"
 }
 
 if [[ "${BASH_SOURCE[0]}" == "$0" ]]; then

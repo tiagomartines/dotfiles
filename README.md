@@ -7,6 +7,8 @@ Personal development environment configuration managed with GNU Stow.
 - `fish`
 - `ghostty`
 - `tmux`
+- `neovim`
+- `tree-sitter-cli`
 - `colima`
 - `docker`
 - `docker-compose`
@@ -23,20 +25,24 @@ docker ps
 ## Remove links
 
 ```sh
-stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux
+stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim
 ```
 
 ## Notes
 
-- `~/.config/fish/fish_variables` stays local and is not managed by this repo.
+- `~/.config/fish/fish_variables` stays local, is ignored by Stow, and is not managed by this repo.
 - This repo manages a host-minimum setup: shell, terminal, tmux, and container tooling. App runtimes such as Ruby, Node, and Rails should run inside project containers.
 - `./scripts/bootstrap.sh` installs Homebrew packages from `Brewfile`, wires the Docker Compose plugin, applies `stow`, and tries to switch the default shell to `/opt/homebrew/bin/fish`.
+- The bootstrap also installs `neovim`, `ripgrep`, `fd`, and `fzf` for the editor workflow.
+- The bootstrap also installs `tree-sitter-cli` for Neovim Treesitter parser compilation on the host.
 - The bootstrap may prompt for `sudo` to add `fish` to `/etc/shells` before running `chsh`.
 - `fish` loads the Homebrew environment from `~/.config/fish/conf.d/homebrew.fish`, so new formulas like `tmux` become available in new shells.
 - After the first bootstrap, open a new terminal session or run `exec fish -l` to refresh the current shell before starting Colima.
 - `colima` provides the container runtime on macOS. `docker` is the CLI, and `docker compose` remains available for multi-service projects.
 - `ghostty` launches `fish` directly using `/opt/homebrew/bin/fish --login`.
 - `tmux` expects `/opt/homebrew/bin/fish` and uses `pbcopy` for macOS clipboard integration.
+- `vim` in `fish` opens `nvim`, and `EDITOR`/`VISUAL` are set to `nvim`.
+- Neovim is intended to run on the host. Project runtimes and app CLIs should run in containers.
 
 ## Tmux Shortcuts
 
@@ -45,6 +51,7 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux
 - Split vertical: `Ctrl-b` then `%` or `|`
 - New window: `Ctrl-b` then `c`
 - Move between panes: `Ctrl-b` then `h`, `j`, `k`, or `l`
+- Jump to pane by number: `Right Option+1..9`
 - Resize panes: `Ctrl-b` then `H`, `J`, `K`, or `L`
 - Reload config: `Ctrl-b` then `r`
 - Copy mode selection: `v`
@@ -56,6 +63,10 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux
 docker run --rm -it ruby:3.3 irb
 docker compose run --rm app bundle exec rails console
 ```
+
+- Keep the editor on the host and run project commands inside containers.
+- Use devcontainers only when a specific project or team standard requires them.
+- Running `vim` inside a container should be a fallback for debugging or ephemeral environments, not the default workflow.
 
 ## Neovim
 
