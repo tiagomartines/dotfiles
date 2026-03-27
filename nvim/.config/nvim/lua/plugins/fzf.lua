@@ -46,6 +46,11 @@ return {
         desc = "Help tags",
       },
     },
-    opts = {},
+    opts = {
+      defaults = {
+        hidden = true,
+        no_ignore = false,
+      },
+    },
   },
 }
