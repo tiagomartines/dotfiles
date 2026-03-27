@@ -58,6 +58,10 @@ current_login_shell() {
   printf '%s\n' "$user_shell"
 }
 
+caps_lock_escape_mapping_json() {
+  printf '%s\n' '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":30064771129,"HIDKeyboardModifierMappingDst":30064771113}]}'
+}
+
 ensure_shell_registered() {
   local fish_bin="$1"
 
@@ -100,7 +104,46 @@ apply_dotfiles() {
   [[ -x "$stow_bin" ]] || die "stow not found at $stow_bin after Homebrew installation."
 
   log "Applying dotfiles with GNU Stow"
-  "$stow_bin" --restow -d "$repo_root" -t "$HOME" ghostty fish tmux nvim
+  "$stow_bin" --restow -d "$repo_root" -t "$HOME" ghostty fish tmux nvim macos
+}
+
+apply_caps_lock_escape_remap() {
+  local mapping_json=""
+
+  mapping_json="$(caps_lock_escape_mapping_json)"
+
+  command -v /usr/bin/hidutil >/dev/null 2>&1 || die "hidutil is required on macOS."
+
+  log "Applying Caps Lock to Escape remap"
+  /usr/bin/hidutil property --set "$mapping_json" >/dev/null
+}
+
+load_caps_lock_escape_launch_agent() {
+  local uid=""
+  local label="com.tmartines.capslock-escape"
+  local domain=""
+  local agent_path=""
+
+  uid="$(id -u)"
+  domain="gui/$uid"
+  agent_path="$HOME/Library/LaunchAgents/$label.plist"
+
+  [[ -f "$agent_path" ]] || die "Expected LaunchAgent at $agent_path after stow."
+
+  log "Refreshing Caps Lock to Escape LaunchAgent"
+
+  if ! launchctl bootout "$domain/$label" >/dev/null 2>&1; then
+    :
+  fi
+
+  if ! launchctl bootstrap "$domain" "$agent_path" >/dev/null 2>&1; then
+    warn "Could not bootstrap $label. Run manually: launchctl bootstrap $domain $agent_path"
+    return 0
+  fi
+
+  if ! launchctl kickstart -k "$domain/$label" >/dev/null 2>&1; then
+    warn "Could not kickstart $label. Run manually: launchctl kickstart -k $domain/$label"
+  fi
 }
 
 find_docker_compose_plugin() {
@@ -200,6 +243,8 @@ main() {
   [[ -x "$docker_bin" ]] || die "docker not found at $docker_bin after Homebrew installation."
   link_docker_compose_plugin "$brew_prefix"
   apply_dotfiles "$brew_prefix/bin/stow" "$repo_root"
+  apply_caps_lock_escape_remap
+  load_caps_lock_escape_launch_agent
   [[ -x "$fish_bin" ]] || die "fish not found at $fish_bin after Homebrew installation."
   validate_fish_environment "$fish_bin" "$docker_bin"
   ensure_default_shell "$fish_bin"

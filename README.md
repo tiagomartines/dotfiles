@@ -25,7 +25,7 @@ docker ps
 ## Remove links
 
 ```sh
-stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim
+stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim macos
 ```
 
 ## Notes
@@ -33,6 +33,7 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim
 - `~/.config/fish/fish_variables` stays local, is ignored by Stow, and is not managed by this repo.
 - This repo manages a host-minimum setup: shell, terminal, tmux, and container tooling. App runtimes such as Ruby, Node, and Rails should run inside project containers.
 - `./scripts/bootstrap.sh` installs Homebrew packages from `Brewfile`, wires the Docker Compose plugin, applies `stow`, and tries to switch the default shell to `/opt/homebrew/bin/fish`.
+- The repo also manages a macOS `LaunchAgent` that keeps `Caps Lock` remapped to `Escape` across logins.
 - The bootstrap also installs `neovim`, `ripgrep`, `fd`, and `fzf` for the editor workflow.
 - The bootstrap also installs `tree-sitter-cli` for Neovim Treesitter parser compilation on the host.
 - The bootstrap may prompt for `sudo` to add `fish` to `/etc/shells` before running `chsh`.
@@ -43,6 +44,13 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim
 - `tmux` expects `/opt/homebrew/bin/fish` and uses `pbcopy` for macOS clipboard integration.
 - `vim` in `fish` opens `nvim`, and `EDITOR`/`VISUAL` are set to `nvim`.
 - Neovim is intended to run on the host. Project runtimes and app CLIs should run in containers.
+
+## macOS Keyboard
+
+- `Caps Lock` is globally remapped to `Escape` with `hidutil`.
+- Verify the active mapping with `hidutil property --get 'UserKeyMapping'`.
+- Reset the current session temporarily with `hidutil property --set '{"UserKeyMapping":[]}'`.
+- Disable the persistent remap with `launchctl bootout gui/$(id -u) ~/Library/LaunchAgents/com.tmartines.capslock-escape.plist`.
 
 ## Tmux Shortcuts
 
