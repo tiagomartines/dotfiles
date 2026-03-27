@@ -1,4 +1,6 @@
 theme = light:Xcode Light hc,dark:Xcode Dark hc
+cursor-color = cell-foreground
+cursor-text = cell-background
 window-theme = system
 font-family = JetBrains Mono
 font-size = 12
