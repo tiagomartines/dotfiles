@@ -58,6 +58,39 @@ current_login_shell() {
   printf '%s\n' "$user_shell"
 }
 
+prompt_ai_cli_choice() {
+  local choice=""
+
+  if [[ ! -t 0 ]] || [[ ! -t 1 ]]; then
+    printf '==> %s\n' "No TTY detected; skipping AI CLI installation" >&2
+    printf '%s\n' "skip"
+    return 0
+  fi
+
+  while true; do
+    printf 'Install which terminal AI CLI? [1] Codex [2] Claude Code [3] Skip: ' >&2
+    read -r choice
+
+    case "$choice" in
+      1|c|C|codex|Codex)
+        printf '%s\n' "codex"
+        return 0
+        ;;
+      2|l|L|claude|Claude|claude-code|ClaudeCode|claude\ code|Claude\ Code)
+        printf '%s\n' "claude"
+        return 0
+        ;;
+      3|s|S|skip|Skip)
+        printf '%s\n' "skip"
+        return 0
+        ;;
+      *)
+        warn "Choose 1, 2, or 3."
+        ;;
+    esac
+  done
+}
+
 caps_lock_escape_mapping_json() {
   printf '%s\n' '{"UserKeyMapping":[{"HIDKeyboardModifierMappingSrc":30064771129,"HIDKeyboardModifierMappingDst":30064771113}]}'
 }
@@ -146,6 +179,38 @@ load_caps_lock_escape_launch_agent() {
   fi
 }
 
+setup_mise_runtimes() {
+  local mise_bin="$1"
+
+  [[ -x "$mise_bin" ]] || die "mise not found at $mise_bin after Homebrew installation."
+
+  log "Configuring global Ruby and Node with mise"
+  "$mise_bin" use -g -y ruby@latest node@latest
+}
+
+install_ai_cli() {
+  local choice="$1"
+  local brew_bin="$2"
+  local mise_bin="$3"
+
+  case "$choice" in
+    codex)
+      log "Installing Codex CLI"
+      "$mise_bin" exec -y node@latest -- npm install -g @openai/codex
+      ;;
+    claude)
+      log "Installing Claude Code CLI"
+      "$brew_bin" install --cask claude-code
+      ;;
+    skip)
+      log "Skipping AI CLI installation"
+      ;;
+    *)
+      die "Unknown AI CLI choice: $choice"
+      ;;
+  esac
+}
+
 find_docker_compose_plugin() {
   local brew_prefix="$1"
   local candidate=""
@@ -195,17 +260,36 @@ link_docker_compose_plugin() {
 validate_fish_environment() {
   local fish_bin="$1"
   local docker_bin="$2"
+  local ai_cli_choice="${3:-skip}"
 
   log "Validating Homebrew tools inside fish"
   DOCKER_BIN="$docker_bin" "$fish_bin" -lc 'test (command -v docker) = $DOCKER_BIN' || die "fish is not using the Homebrew docker CLI at $docker_bin."
   "$fish_bin" -lc 'command -sq colima' || die "fish cannot find colima after bootstrap."
   "$fish_bin" -lc 'docker compose version >/dev/null 2>&1' || die "docker compose is not available inside fish."
+  "$fish_bin" -lc 'command -sq mise' || die "fish cannot find mise after bootstrap."
+  "$fish_bin" -lc 'test (command -v node) = (mise which node)' || die "fish is not using the mise-managed node runtime."
+  "$fish_bin" -lc 'test (command -v npm) = (mise which npm)' || die "fish is not using the mise-managed npm binary."
+  "$fish_bin" -lc 'test (command -v ruby) = (mise which ruby)' || die "fish is not using the mise-managed ruby runtime."
   "$fish_bin" -lc 'command -sq tmux' || die "fish cannot find tmux after bootstrap."
   "$fish_bin" -lc 'command -sq nvim' || die "fish cannot find nvim after bootstrap."
   "$fish_bin" -lc 'command -sq tree-sitter' || die "fish cannot find tree-sitter after bootstrap."
   "$fish_bin" -lc 'command -sq rg' || die "fish cannot find ripgrep after bootstrap."
   "$fish_bin" -lc 'command -sq fd' || die "fish cannot find fd after bootstrap."
   "$fish_bin" -lc 'command -sq fzf' || die "fish cannot find fzf after bootstrap."
+
+  case "$ai_cli_choice" in
+    codex)
+      "$fish_bin" -lc 'command -sq codex' || die "fish cannot find codex after bootstrap."
+      ;;
+    claude)
+      "$fish_bin" -lc 'command -sq claude' || die "fish cannot find claude after bootstrap."
+      ;;
+    skip)
+      ;;
+    *)
+      die "Unknown AI CLI choice for validation: $ai_cli_choice"
+      ;;
+  esac
 }
 
 main() {
@@ -215,6 +299,8 @@ main() {
   local brew_prefix=""
   local docker_bin=""
   local fish_bin=""
+  local mise_bin=""
+  local ai_cli_choice=""
 
   [[ "${EUID}" -ne 0 ]] || die "Run this bootstrap as your user, not with sudo."
   [[ "$(uname -s)" == "Darwin" ]] || die "This bootstrap only supports macOS."
@@ -235,6 +321,7 @@ main() {
   brew_prefix="$("$brew_bin" --prefix)"
   docker_bin="$brew_prefix/bin/docker"
   fish_bin="$brew_prefix/bin/fish"
+  mise_bin="$brew_prefix/bin/mise"
 
   log "Using Homebrew at $brew_bin"
   log "Installing packages from Brewfile"
@@ -245,13 +332,27 @@ main() {
   apply_dotfiles "$brew_prefix/bin/stow" "$repo_root"
   apply_caps_lock_escape_remap
   load_caps_lock_escape_launch_agent
+  setup_mise_runtimes "$mise_bin"
+  ai_cli_choice="$(prompt_ai_cli_choice)"
+  install_ai_cli "$ai_cli_choice" "$brew_bin" "$mise_bin"
   [[ -x "$fish_bin" ]] || die "fish not found at $fish_bin after Homebrew installation."
-  validate_fish_environment "$fish_bin" "$docker_bin"
+  validate_fish_environment "$fish_bin" "$docker_bin" "$ai_cli_choice"
   ensure_default_shell "$fish_bin"
 
   log "Bootstrap complete. Start a new terminal session or run: exec fish -l"
   log "Then start Colima with: colima start"
   log "Verify the container runtime with: docker ps"
+  case "$ai_cli_choice" in
+    codex)
+      log "Codex CLI installed. Authenticate by running: codex"
+      ;;
+    claude)
+      log "Claude Code CLI installed. Authenticate by running: claude"
+      ;;
+    skip)
+      log "No AI CLI installed during bootstrap"
+      ;;
+  esac
   log "Open Neovim once to install plugins and host-side Mason tooling: nvim"
 }
 

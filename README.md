@@ -5,6 +5,7 @@ Personal development environment configuration managed with GNU Stow.
 ## Packages
 
 - `fish`
+- `mise`
 - `ghostty`
 - `tmux`
 - `neovim`
@@ -31,13 +32,16 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim macos
 ## Notes
 
 - `~/.config/fish/fish_variables` stays local, is ignored by Stow, and is not managed by this repo.
-- This repo manages a host-minimum setup: shell, terminal, tmux, and container tooling. App runtimes such as Ruby, Node, and Rails should run inside project containers.
-- `./scripts/bootstrap.sh` installs Homebrew packages from `Brewfile`, wires the Docker Compose plugin, applies `stow`, and tries to switch the default shell to `/opt/homebrew/bin/fish`.
+- This repo manages a host setup for shell, terminal, tmux, container tooling, and baseline language runtimes. Project-specific app stacks can still live inside containers.
+- `./scripts/bootstrap.sh` installs Homebrew packages from `Brewfile`, wires the Docker Compose plugin, applies `stow`, configures global `ruby@latest` and `node@latest` with `mise`, and tries to switch the default shell to `/opt/homebrew/bin/fish`.
 - The repo also manages a macOS `LaunchAgent` that keeps `Caps Lock` remapped to `Escape` across logins.
 - The bootstrap also installs `neovim`, `ripgrep`, `fd`, and `fzf` for the editor workflow.
 - The bootstrap also installs `tree-sitter-cli` for Neovim Treesitter parser compilation on the host.
+- The bootstrap asks which terminal AI CLI to install: `Codex`, `Claude Code`, or `Skip`. Without an interactive TTY, it skips AI CLI installation.
+- `Codex` is installed as the terminal CLI `codex` using the global `node` runtime managed by `mise`.
+- `Claude Code` is installed as the terminal CLI `claude` via Homebrew cask.
 - The bootstrap may prompt for `sudo` to add `fish` to `/etc/shells` before running `chsh`.
-- `fish` loads the Homebrew environment from `~/.config/fish/conf.d/homebrew.fish`, so new formulas like `tmux` become available in new shells.
+- `fish` loads the Homebrew environment from `~/.config/fish/conf.d/homebrew.fish`, and Homebrew's `mise-activate.fish` makes the global `mise` runtimes available in new shells.
 - After the first bootstrap, open a new terminal session or run `exec fish -l` to refresh the current shell before starting Colima.
 - `colima` provides the container runtime on macOS. `docker` is the CLI, and `docker compose` remains available for multi-service projects.
 - `ghostty` launches `fish` directly using `/opt/homebrew/bin/fish --login`.
@@ -73,12 +77,13 @@ docker compose run --rm app bundle exec rails console
 ```
 
 - Keep the editor on the host and run project commands inside containers.
+- Ruby and Node are also available on the host via `mise` for editor integrations, CLIs, and general tooling.
 - Use devcontainers only when a specific project or team standard requires them.
 - Running `vim` inside a container should be a fallback for debugging or ephemeral environments, not the default workflow.
 
 ## Neovim
 
-Neovim is expected to run on the host, while app runtimes and project CLIs stay inside containers.
+Neovim is expected to run on the host. Project CLIs can still stay in containers, but the host now also has `ruby` and `node` available globally via `mise`.
 
 ### Installation flow
 
@@ -90,6 +95,10 @@ Neovim is expected to run on the host, while app runtimes and project CLIs stay 
 ### Host tools installed by bootstrap
 
 - `neovim`: the editor itself and the runtime that loads the Lua configuration shipped in this repo.
+- `mise`: runtime manager used to install and maintain global host runtimes.
+- `ruby`: latest global Ruby managed by `mise`.
+- `node`: latest global Node.js managed by `mise`.
+- `npm`: package manager bundled with the global `node` runtime managed by `mise`.
 - `ripgrep`: fast text search backend used by picker workflows such as live grep.
 - `fd`: fast file discovery backend used by file pickers.
 - `fzf`: fuzzy matching engine used underneath `fzf-lua`.

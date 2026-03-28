@@ -1,5 +1,6 @@
 brew "stow"
 brew "fish"
+brew "mise"
 brew "tmux"
 brew "neovim"
 brew "tree-sitter-cli"
