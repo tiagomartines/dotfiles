@@ -276,6 +276,7 @@ validate_fish_environment() {
   "$fish_bin" -lc 'command -sq rg' || die "fish cannot find ripgrep after bootstrap."
   "$fish_bin" -lc 'command -sq fd' || die "fish cannot find fd after bootstrap."
   "$fish_bin" -lc 'command -sq fzf' || die "fish cannot find fzf after bootstrap."
+  "$fish_bin" -lc 'command -sq lazygit' || die "fish cannot find lazygit after bootstrap."
 
   case "$ai_cli_choice" in
     codex)

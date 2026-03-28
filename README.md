@@ -10,6 +10,7 @@ Personal development environment configuration managed with GNU Stow.
 - `tmux`
 - `neovim`
 - `tree-sitter-cli`
+- `lazygit`
 - `colima`
 - `docker`
 - `docker-compose`
@@ -44,6 +45,7 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim macos
 - `fish` loads the Homebrew environment from `~/.config/fish/conf.d/homebrew.fish`, and Homebrew's `mise-activate.fish` makes the global `mise` runtimes available in new shells.
 - After the first bootstrap, open a new terminal session or run `exec fish -l` to refresh the current shell before starting Colima.
 - `colima` provides the container runtime on macOS. `docker` is the CLI, and `docker compose` remains available for multi-service projects.
+- `lazygit` is installed on the host as the terminal Git UI.
 - `ghostty` launches `fish` directly using `/opt/homebrew/bin/fish --login`.
 - `tmux` expects `/opt/homebrew/bin/fish` and uses `pbcopy` for macOS clipboard integration.
 - `vim` in `fish` opens `nvim`, and `EDITOR`/`VISUAL` are set to `nvim`.
@@ -65,6 +67,7 @@ stow -D -d "$HOME/Projects/dotfiles" -t "$HOME" ghostty fish tmux nvim macos
 - Move between panes: `Ctrl-b` then `h`, `j`, `k`, or `l`
 - Jump to pane by number: `Right Option+1..9`
 - Resize panes: `Ctrl-b` then `H`, `J`, `K`, or `L`
+- Open `lazygit` in a new window: `Ctrl-b` then `g`
 - Reload config: `Ctrl-b` then `r`
 - Copy mode selection: `v`
 - Copy selected text to macOS clipboard: `y` or `Enter`
@@ -103,6 +106,7 @@ Neovim is expected to run on the host. Project CLIs can still stay in containers
 - `fd`: fast file discovery backend used by file pickers.
 - `fzf`: fuzzy matching engine used underneath `fzf-lua`.
 - `tree-sitter-cli`: host-side parser compiler required for automatic Treesitter parser installation.
+- `lazygit`: terminal Git UI available on the host.
 
 ### Plugins installed on first Neovim launch
 
@@ -136,6 +140,7 @@ Neovim is expected to run on the host. Project CLIs can still stay in containers
 
 - Leader: `Space`
 - `vim` in `fish` opens `nvim`
+- `lg` in `fish` opens `lazygit`
 - Finder shortcuts:
   - `<leader>ff` files
   - `<leader>fg` live grep

@@ -20,6 +20,7 @@ if status is-interactive
         abbr --add gd 'git diff'
         abbr --add gl 'git pull'
         abbr --add gp 'git push'
+        abbr --add lg lazygit
     end
 
     if command -sq docker
