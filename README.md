@@ -121,14 +121,16 @@ Neovim is expected to run on the host. Project CLIs can still stay in containers
 - `nvim-lspconfig`: Neovim's LSP integration layer for diagnostics, keymaps, and server-specific configuration.
 - `blink.cmp`: completion engine that provides insert-mode completion, command-line completion, and signature help.
 - `conform.nvim`: formatter orchestrator used for format-on-save and manual formatting commands.
+- Ruby and ERB format on save via `ruby_lsp`; the existing JS/Lua/YAML formatting flow stays unchanged.
 
 ### Mason-managed language tooling
 
 - `lua_ls`: Lua language server used for Neovim config and other Lua projects.
+- `ruby_lsp`: Ruby language server used for Ruby and ERB files.
 - `ts_ls`: TypeScript and JavaScript language server used for TS, TSX, JS, and related files.
 - `stylua`: Lua formatter used by `conform.nvim`.
 - `prettierd`: daemonized Prettier backend used by `conform.nvim` for JavaScript, TypeScript, JSON, Markdown, and YAML.
-- Ruby and Rails language servers are intentionally not installed globally; manage them per project or inside containers.
+- Rails-specific language tooling remains project-scoped; this repo only auto-installs `ruby_lsp` on the host.
 
 ### Treesitter parser coverage
 
@@ -148,6 +150,7 @@ Neovim is expected to run on the host. Project CLIs can still stay in containers
   - `<leader>fb` buffers
   - `<leader>fh` help tags
 - Git shortcuts:
+  - `<leader>gg` open `lazygit`
   - `]h` next hunk
   - `[h` previous hunk
   - `<leader>gp` preview hunk

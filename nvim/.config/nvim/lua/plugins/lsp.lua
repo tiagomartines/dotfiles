@@ -1,5 +1,6 @@
 local servers = {
   "lua_ls",
+  "ruby_lsp",
   "ts_ls",
 }
 
@@ -137,6 +138,10 @@ return {
         capabilities = capabilities,
       })
 
+      vim.lsp.config("ruby_lsp", {
+        capabilities = capabilities,
+      })
+
       for _, server in ipairs(servers) do
         vim.lsp.enable(server)
       end
@@ -168,10 +173,21 @@ return {
         typescriptreact = { "prettierd", "prettier", stop_after_first = true },
         yaml = { "prettierd", "prettier", stop_after_first = true },
       },
-      format_on_save = {
-        timeout_ms = 1000,
-        lsp_format = "never",
-      },
+      format_on_save = function(bufnr)
+        local filetype = vim.bo[bufnr].filetype
+
+        if filetype == "ruby" or filetype == "eruby" then
+          return {
+            timeout_ms = 1000,
+            lsp_format = "fallback",
+          }
+        end
+
+        return {
+          timeout_ms = 1000,
+          lsp_format = "never",
+        }
+      end,
       notify_on_error = true,
     },
   },
